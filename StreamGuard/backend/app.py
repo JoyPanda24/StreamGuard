@@ -28,9 +28,6 @@ def home():
             "retrain_model":   "/api/ml/train"
         }
     })
-CORS(app)
-
-init_db()
 
 @app.route("/api/session/log", methods=["POST"])
 def log_new_session():
