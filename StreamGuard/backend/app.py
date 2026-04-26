@@ -8,6 +8,27 @@ import time
 
 app = Flask(__name__)
 CORS(app)
+init_db()
+
+@app.route("/")
+def home():
+    return jsonify({
+        "name": "StreamGuard API",
+        "version": "1.0",
+        "status": "online",
+        "description": "OTT Session Anomaly Detection System",
+        "author": "JoyPanda24",
+        "endpoints": {
+            "geoip":           "/api/geoip/<ip>",
+            "analyze":         "/api/analyze/<user_id>",
+            "simulate_attack": "/api/simulate/attack",
+            "history":         "/api/history/<user_id>",
+            "flagged_users":   "/api/flagged-users",
+            "ml_analyze":      "/api/ml/analyze/<user_id>",
+            "retrain_model":   "/api/ml/train"
+        }
+    })
+CORS(app)
 
 init_db()
 
