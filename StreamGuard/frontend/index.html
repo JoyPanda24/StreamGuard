@@ -2,121 +2,707 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>StreamGuard — OTT Security Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StreamGuard — OTT Security</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg:        #080B0F;
+      --surface:   #0E1318;
+      --border:    rgba(255,255,255,0.06);
+      --border-hover: rgba(255,255,255,0.12);
+      --text:      #EDF0F4;
+      --muted:     #4A5568;
+      --accent:    #00D4FF;
+      --accent-dim:#003D4D;
+      --green:     #00FF88;
+      --green-dim: #003D20;
+      --yellow:    #FFB800;
+      --yellow-dim:#3D2C00;
+      --red:       #FF3D3D;
+      --red-dim:   #3D0000;
+      --critical:  #FF2020;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; }
-    header { background: #161b22; padding: 20px 40px; border-bottom: 1px solid #30363d; }
-    header h1 { color: #58a6ff; font-size: 1.5rem; }
-    header p  { color: #8b949e; font-size: 0.9rem; }
-    .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
-    .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-    .card h2 { margin-bottom: 15px; font-size: 1rem; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
-    input, button { padding: 10px 14px; border-radius: 6px; border: 1px solid #30363d; font-size: 0.95rem; }
-    input { background: #0d1117; color: #e6edf3; width: 200px; margin-right: 10px; }
-    button { background: #238636; color: white; border: none; cursor: pointer; }
-    button:hover { background: #2ea043; }
-    button.danger { background: #da3633; }
-    button.danger:hover { background: #f85149; }
-    .risk-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; }
-    .risk-LOW      { background: #1f4b2a; color: #3fb950; }
-    .risk-MEDIUM   { background: #4b3a1f; color: #e3b341; }
-    .risk-HIGH     { background: #4b1f1f; color: #f85149; }
-    .risk-CRITICAL { background: #8b0000; color: #ff6b6b; animation: pulse 1s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
-    .flag-item { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 12px; margin-top: 10px; }
-    .flag-item .reason { color: #e6edf3; margin-bottom: 5px; }
-    .flag-item .detail { color: #8b949e; font-size: 0.85rem; }
-    pre { background: #0d1117; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; color: #79c0ff; }
-    #status { color: #8b949e; font-size: 0.9rem; margin-top: 10px; min-height: 20px; }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background glow */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 400px;
+      background: radial-gradient(ellipse, rgba(0,212,255,0.04) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Header ── */
+    header {
+      position: relative;
+      padding: 40px 60px 36px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 1;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      border: 1.5px solid var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 0 20px rgba(0,212,255,0.15);
+    }
+
+    .logo h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .logo p {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--green);
+      letter-spacing: 0.05em;
+    }
+
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── Layout ── */
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 50px 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .card:hover { border-color: var(--border-hover); }
+
+    .card-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .card-desc {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 22px;
+      line-height: 1.6;
+    }
+
+    /* ── Input Row ── */
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .input-wrap {
+      position: relative;
+      flex: 1;
+      max-width: 260px;
+    }
+
+    .input-prefix {
+      position: absolute;
+      left: 14px; top: 50%;
+      transform: translateY(-50%);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px 11px 52px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,212,255,0.08);
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 11px 22px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+    }
+    .btn-primary:hover {
+      background: #33DDFF;
+      box-shadow: 0 0 20px rgba(0,212,255,0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--red);
+      border: 1px solid rgba(255,61,61,0.3);
+    }
+    .btn-danger:hover {
+      background: rgba(255,61,61,0.08);
+      border-color: var(--red);
+      box-shadow: 0 0 16px rgba(255,61,61,0.15);
+      transform: translateY(-1px);
+    }
+
+    .btn:active { transform: translateY(0); }
+
+    /* ── Status message ── */
+    .msg {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--green);
+      margin-top: 14px;
+      min-height: 18px;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: all 0.3s;
+    }
+    .msg.show { opacity: 1; transform: translateY(0); }
+
+    /* ── Divider ── */
+    .divider { height: 1px; background: var(--border); margin: 32px 0; }
+
+    /* ── Threat Report ── */
+    #resultsCard { display: none; }
+    #resultsCard.visible { display: block; animation: fadeUp 0.4s ease forwards; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .report-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .report-user {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .report-user span {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ── Risk Badge ── */
+    .risk-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .risk-LOW      { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(0,255,136,0.2); }
+    .risk-MEDIUM   { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(255,184,0,0.2); }
+    .risk-HIGH     { background: var(--red-dim);    color: var(--red);    border: 1px solid rgba(255,61,61,0.2); }
+    .risk-CRITICAL {
+      background: var(--red-dim);
+      color: var(--critical);
+      border: 1px solid rgba(255,32,32,0.3);
+      box-shadow: 0 0 16px rgba(255,32,32,0.15);
+      animation: criticalPulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes criticalPulse {
+      0%,100% { box-shadow: 0 0 16px rgba(255,32,32,0.15); }
+      50%     { box-shadow: 0 0 28px rgba(255,32,32,0.35); }
+    }
+
+    /* ── Flag Items ── */
+    .flags-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .flag-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px 16px;
+      align-items: start;
+      animation: fadeUp 0.3s ease forwards;
+      opacity: 0;
+    }
+
+    .flag-item:nth-child(1) { animation-delay: 0.05s; }
+    .flag-item:nth-child(2) { animation-delay: 0.10s; }
+    .flag-item:nth-child(3) { animation-delay: 0.15s; }
+    .flag-item:nth-child(4) { animation-delay: 0.20s; }
+
+    .flag-sev {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      padding: 3px 8px;
+      border-radius: 3px;
+      margin-top: 2px;
+      white-space: nowrap;
+    }
+
+    .sev-CRITICAL { background: rgba(255,32,32,0.12);  color: #FF4444; }
+    .sev-HIGH     { background: rgba(255,61,61,0.1);   color: #FF6B6B; }
+    .sev-MEDIUM   { background: rgba(255,184,0,0.1);   color: var(--yellow); }
+    .sev-LOW      { background: rgba(0,255,136,0.08);  color: var(--green); }
+
+    .flag-body {}
+    .flag-reason {
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    .flag-meta {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .flag-meta-item { display: flex; gap: 5px; }
+    .flag-meta-key  { color: #2A3F4F; }
+    .flag-meta-val  { color: #5A8A9F; }
+
+    /* ── Clean status ── */
+    .clean-state {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 20px 0;
+    }
+
+    .clean-icon {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--green-dim);
+      border: 1px solid rgba(0,255,136,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+
+    .clean-text {
+      font-size: 0.88rem;
+      color: var(--green);
+      font-weight: 500;
+    }
+
+    .clean-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ── JSON toggle ── */
+    .json-toggle {
+      margin-top: 20px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+
+    .json-toggle summary {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      user-select: none;
+      transition: color 0.2s;
+    }
+
+    .json-toggle summary:hover { color: var(--accent); }
+
+    .json-toggle pre {
+      margin-top: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      color: #4A8FA8;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stat-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      text-align: center;
+    }
+
+    .stat-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: var(--accent);
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* ── Loading spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(0,212,255,0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Issue count ── */
+    .issue-count {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .issue-count strong { color: var(--text); }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      header { padding: 24px; }
+      main { padding: 30px 24px; }
+      .stats-row { grid-template-columns: repeat(3, 1fr); }
+    }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>🛡️ StreamGuard</h1>
-  <p>OTT Session Anomaly Detection System</p>
+  <div class="logo">
+    <div class="logo-icon">🛡</div>
+    <div>
+      <h1>StreamGuard</h1>
+      <p>OTT Session Anomaly Detection</p>
+    </div>
+  </div>
+  <div class="status-indicator">
+    <div class="status-dot"></div>
+    System Online
+  </div>
 </header>
 
-<div class="container">
+<main>
 
-  <!-- Simulate Attack -->
+  <!-- Attack Simulator -->
+  <div class="section-label">Attack Simulation</div>
   <div class="card">
-    <h2>⚠️ Attack Simulator</h2>
-    <p style="color:#8b949e; margin-bottom:15px; font-size:0.9rem;">
-      Simulates a cookie-hijacking scenario: a stolen account used simultaneously from India, USA, and Russia.
-    </p>
-    <input type="text" id="attackUserId" placeholder="User ID" value="victim_001">
-    <button class="danger" onclick="simulateAttack()">Simulate Attack</button>
-    <div id="status"></div>
+    <div class="card-title">Cookie Hijack Simulator</div>
+    <div class="card-desc">Injects sessions from IN → US → RU simultaneously to trigger anomaly detection.</div>
+    <div class="input-row">
+      <div class="input-wrap">
+        <span class="input-prefix">uid/</span>
+        <input type="text" id="attackUserId" value="victim_001">
+      </div>
+      <button class="btn btn-danger" onclick="simulateAttack()">Run Simulation</button>
+    </div>
+    <div class="msg" id="status"></div>
   </div>
 
-  <!-- Analyze User -->
+  <!-- Analyze -->
+  <div class="section-label" style="margin-top:32px">Analysis</div>
   <div class="card">
-    <h2>🔍 Analyze User Session</h2>
-    <input type="text" id="analyzeUserId" placeholder="User ID" value="victim_001">
-    <button onclick="analyzeUser()">Run Analysis</button>
+    <div class="card-title">Session Analyzer</div>
+    <div class="card-desc">Run all detection modules: rule-based checks + ML Isolation Forest model.</div>
+    <div class="input-row">
+      <div class="input-wrap">
+        <span class="input-prefix">uid/</span>
+        <input type="text" id="analyzeUserId" value="victim_001">
+      </div>
+      <button class="btn btn-primary" onclick="analyzeUser()" id="analyzeBtn">Analyze</button>
+    </div>
   </div>
 
   <!-- Results -->
-  <div class="card" id="resultsCard" style="display:none">
-    <h2>📊 Threat Report</h2>
-    <div id="results"></div>
+  <div id="resultsCard">
+    <div class="section-label" style="margin-top:32px">Threat Report</div>
+    <div class="card">
+      <div class="report-header">
+        <div>
+          <div class="report-user">User ID — <span id="rUser"></span></div>
+          <div id="rBadge"></div>
+        </div>
+        <div id="rTimestamp" style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);text-align:right;"></div>
+      </div>
+
+      <div class="stats-row" id="rStats"></div>
+
+      <div class="issue-count" id="rIssueCount"></div>
+      <div class="flags-grid" id="rFlags"></div>
+
+      <details class="json-toggle">
+        <summary>▸ Raw JSON Response</summary>
+        <pre id="rJson"></pre>
+      </details>
+    </div>
   </div>
 
-</div>
+</main>
 
 <script>
   const API = "https://steamguard.onrender.com/api";
 
   async function simulateAttack() {
-    const userId = document.getElementById("attackUserId").value;
-    document.getElementById("status").textContent = "Simulating attack...";
-    
-    const res = await fetch(`${API}/simulate/attack`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({user_id: userId})
-    });
-    const data = await res.json();
-    document.getElementById("status").textContent = "✅ Attack simulated! Now click 'Run Analysis'.";
-    document.getElementById("analyzeUserId").value = userId;
+    const userId = document.getElementById("attackUserId").value.trim();
+    const msg = document.getElementById("status");
+    msg.innerHTML = '<span class="spinner"></span>Injecting attack sessions...';
+    msg.classList.add("show");
+
+    try {
+      const res = await fetch(`${API}/simulate/attack`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({user_id: userId})
+      });
+      await res.json();
+      msg.innerHTML = "✓ Attack simulated — run analysis to see detections";
+      document.getElementById("analyzeUserId").value = userId;
+    } catch(e) {
+      msg.style.color = "var(--red)";
+      msg.innerHTML = "✗ Could not reach API — is the server running?";
+    }
   }
 
   async function analyzeUser() {
-    const userId = document.getElementById("analyzeUserId").value;
-    const res = await fetch(`${API}/analyze/${userId}`);
-    const data = await res.json();
-    renderResults(data);
+    const userId = document.getElementById("analyzeUserId").value.trim();
+    const btn = document.getElementById("analyzeBtn");
+    btn.innerHTML = '<span class="spinner"></span>Analyzing...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${API}/analyze/${userId}`);
+      const data = await res.json();
+      renderResults(data);
+    } catch(e) {
+      alert("Could not reach API. Make sure the backend server is running.");
+    } finally {
+      btn.innerHTML = "Analyze";
+      btn.disabled = false;
+    }
   }
 
   function renderResults(data) {
     const card = document.getElementById("resultsCard");
-    const div  = document.getElementById("results");
     card.style.display = "block";
+    setTimeout(() => card.classList.add("visible"), 10);
 
-    let html = `
-      <p><strong>User:</strong> ${data.user_id}</p>
-      <p style="margin:10px 0"><strong>Overall Risk:</strong> 
-        <span class="risk-badge risk-${data.overall_risk}">${data.overall_risk}</span>
-      </p>
+    // User + badge
+    document.getElementById("rUser").textContent = data.user_id;
+    document.getElementById("rBadge").innerHTML =
+      `<span class="risk-badge risk-${data.overall_risk}">${data.overall_risk} Risk</span>`;
+
+    // Timestamp
+    const ts = new Date(data.timestamp * 1000);
+    document.getElementById("rTimestamp").innerHTML =
+      `Analyzed at<br>${ts.toLocaleTimeString()} · ${ts.toLocaleDateString()}`;
+
+    // Stats
+    const flags = data.flags || [];
+    const critical = flags.filter(f => f.severity === "CRITICAL").length;
+    const high     = flags.filter(f => f.severity === "HIGH").length;
+    document.getElementById("rStats").innerHTML = `
+      <div class="stat-box">
+        <span class="stat-val">${flags.length}</span>
+        <span class="stat-label">Issues Found</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-val" style="color:var(--red)">${critical}</span>
+        <span class="stat-label">Critical</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-val" style="color:var(--yellow)">${high}</span>
+        <span class="stat-label">High</span>
+      </div>
     `;
 
-    if (data.flags.length === 0) {
-      html += `<p style="color:#3fb950; margin-top:10px">✅ No suspicious activity detected.</p>`;
+    // Issue count
+    document.getElementById("rIssueCount").innerHTML =
+      flags.length === 0
+        ? ""
+        : `<strong>${flags.length}</strong> anomal${flags.length === 1 ? "y" : "ies"} detected across all modules`;
+
+    // Flags
+    const flagsEl = document.getElementById("rFlags");
+    if (flags.length === 0) {
+      flagsEl.innerHTML = `
+        <div class="clean-state">
+          <div class="clean-icon">✓</div>
+          <div>
+            <div class="clean-text">No anomalies detected</div>
+            <div class="clean-sub">All checks passed — session appears normal</div>
+          </div>
+        </div>`;
     } else {
-      html += `<p style="margin:10px 0; color:#8b949e">${data.flags.length} issue(s) detected:</p>`;
-      data.flags.forEach(flag => {
-        html += `
+      flagsEl.innerHTML = flags.map(f => {
+        // Build meta items from flag fields
+        const skip = new Set(["flag","reason","severity"]);
+        const metaItems = Object.entries(f)
+          .filter(([k]) => !skip.has(k))
+          .map(([k, v]) => {
+            const display = Array.isArray(v) ? v.join(", ") : v;
+            return `<div class="flag-meta-item">
+              <span class="flag-meta-key">${k}</span>
+              <span class="flag-meta-val">${display}</span>
+            </div>`;
+          }).join("");
+
+        return `
           <div class="flag-item">
-            <div class="reason">🚨 <strong>${flag.severity}</strong>: ${flag.reason}</div>
-            <div class="detail">${JSON.stringify(flag, null, 2).replace(/[{}",]/g, "")}</div>
+            <span class="flag-sev sev-${f.severity}">${f.severity}</span>
+            <div class="flag-body">
+              <div class="flag-reason">${f.reason}</div>
+              ${metaItems ? `<div class="flag-meta">${metaItems}</div>` : ""}
+            </div>
           </div>`;
-      });
+      }).join("");
     }
 
-    html += `<details style="margin-top:15px"><summary style="cursor:pointer;color:#58a6ff">Raw JSON Response</summary><pre>${JSON.stringify(data, null, 2)}</pre></details>`;
-    div.innerHTML = html;
+    // JSON
+    document.getElementById("rJson").textContent = JSON.stringify(data, null, 2);
+
+    // Scroll to results
+    card.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 </script>
 
