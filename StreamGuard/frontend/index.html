@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>StreamGuard — OTT Security Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; }
+    header { background: #161b22; padding: 20px 40px; border-bottom: 1px solid #30363d; }
+    header h1 { color: #58a6ff; font-size: 1.5rem; }
+    header p  { color: #8b949e; font-size: 0.9rem; }
+    .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+    .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+    .card h2 { margin-bottom: 15px; font-size: 1rem; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
+    input, button { padding: 10px 14px; border-radius: 6px; border: 1px solid #30363d; font-size: 0.95rem; }
+    input { background: #0d1117; color: #e6edf3; width: 200px; margin-right: 10px; }
+    button { background: #238636; color: white; border: none; cursor: pointer; }
+    button:hover { background: #2ea043; }
+    button.danger { background: #da3633; }
+    button.danger:hover { background: #f85149; }
+    .risk-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; }
+    .risk-LOW      { background: #1f4b2a; color: #3fb950; }
+    .risk-MEDIUM   { background: #4b3a1f; color: #e3b341; }
+    .risk-HIGH     { background: #4b1f1f; color: #f85149; }
+    .risk-CRITICAL { background: #8b0000; color: #ff6b6b; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+    .flag-item { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 12px; margin-top: 10px; }
+    .flag-item .reason { color: #e6edf3; margin-bottom: 5px; }
+    .flag-item .detail { color: #8b949e; font-size: 0.85rem; }
+    pre { background: #0d1117; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; color: #79c0ff; }
+    #status { color: #8b949e; font-size: 0.9rem; margin-top: 10px; min-height: 20px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🛡️ StreamGuard</h1>
+  <p>OTT Session Anomaly Detection System</p>
+</header>
+
+<div class="container">
+
+  <!-- Simulate Attack -->
+  <div class="card">
+    <h2>⚠️ Attack Simulator</h2>
+    <p style="color:#8b949e; margin-bottom:15px; font-size:0.9rem;">
+      Simulates a cookie-hijacking scenario: a stolen account used simultaneously from India, USA, and Russia.
+    </p>
+    <input type="text" id="attackUserId" placeholder="User ID" value="victim_001">
+    <button class="danger" onclick="simulateAttack()">Simulate Attack</button>
+    <div id="status"></div>
+  </div>
+
+  <!-- Analyze User -->
+  <div class="card">
+    <h2>🔍 Analyze User Session</h2>
+    <input type="text" id="analyzeUserId" placeholder="User ID" value="victim_001">
+    <button onclick="analyzeUser()">Run Analysis</button>
+  </div>
+
+  <!-- Results -->
+  <div class="card" id="resultsCard" style="display:none">
+    <h2>📊 Threat Report</h2>
+    <div id="results"></div>
+  </div>
+
+</div>
+
+<script>
+  const API = "http://localhost:5000/api";
+
+  async function simulateAttack() {
+    const userId = document.getElementById("attackUserId").value;
+    document.getElementById("status").textContent = "Simulating attack...";
+    
+    const res = await fetch(`${API}/simulate/attack`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({user_id: userId})
+    });
+    const data = await res.json();
+    document.getElementById("status").textContent = "✅ Attack simulated! Now click 'Run Analysis'.";
+    document.getElementById("analyzeUserId").value = userId;
+  }
+
+  async function analyzeUser() {
+    const userId = document.getElementById("analyzeUserId").value;
+    const res = await fetch(`${API}/analyze/${userId}`);
+    const data = await res.json();
+    renderResults(data);
+  }
+
+  function renderResults(data) {
+    const card = document.getElementById("resultsCard");
+    const div  = document.getElementById("results");
+    card.style.display = "block";
+
+    let html = `
+      <p><strong>User:</strong> ${data.user_id}</p>
+      <p style="margin:10px 0"><strong>Overall Risk:</strong> 
+        <span class="risk-badge risk-${data.overall_risk}">${data.overall_risk}</span>
+      </p>
+    `;
+
+    if (data.flags.length === 0) {
+      html += `<p style="color:#3fb950; margin-top:10px">✅ No suspicious activity detected.</p>`;
+    } else {
+      html += `<p style="margin:10px 0; color:#8b949e">${data.flags.length} issue(s) detected:</p>`;
+      data.flags.forEach(flag => {
+        html += `
+          <div class="flag-item">
+            <div class="reason">🚨 <strong>${flag.severity}</strong>: ${flag.reason}</div>
+            <div class="detail">${JSON.stringify(flag, null, 2).replace(/[{}",]/g, "")}</div>
+          </div>`;
+      });
+    }
+
+    html += `<details style="margin-top:15px"><summary style="cursor:pointer;color:#58a6ff">Raw JSON Response</summary><pre>${JSON.stringify(data, null, 2)}</pre></details>`;
+    div.innerHTML = html;
+  }
+</script>
+
+</body>
+</html>
