@@ -7,7 +7,7 @@ from database import init_db, get_threat_history, get_all_flagged_users, save_th
 import time
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 init_db()
 
 @app.route("/")
