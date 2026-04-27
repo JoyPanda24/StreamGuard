@@ -14,7 +14,7 @@
 
 | | URL |
 |---|---|
-| 🎨 **Dashboard** | https://joypanda24.github.io/SteamGuard/ |
+| 🎨 **Dashboard** | https://joypanda24.github.io/StreamGuard/ |
 | ⚙️ **API** | https://steamguard.onrender.com |
 | 🔍 **GeoIP Test** | https://steamguard.onrender.com/api/geoip/8.8.8.8 |
 
