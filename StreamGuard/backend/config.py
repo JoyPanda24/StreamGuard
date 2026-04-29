@@ -1,12 +1,22 @@
 import os
+from pathlib import Path
 
-# Render automatically sets the RENDER environment variable
+# Detect environment
 IS_PRODUCTION = "RENDER" in os.environ
 
+# Cross-platform data directory
 if IS_PRODUCTION:
+    # Render cloud deployment
     BASE_STORAGE = "/tmp"
 else:
-    BASE_STORAGE = r"C:\Users\joypa\StreamGuardDB"
+    # Local development - use user's home directory
+    if os.name == 'nt':  # Windows
+        BASE_STORAGE = os.path.join(os.path.expanduser("~"), "StreamGuardDB")
+    else:  # Linux/Mac/Unix
+        BASE_STORAGE = os.path.join(os.path.expanduser("~"), ".streamguard")
+
+# Ensure directory exists
+Path(BASE_STORAGE).mkdir(parents=True, exist_ok=True)
 
 DB_PATH     = os.path.join(BASE_STORAGE, "streamguard.db")
 MODEL_PATH  = os.path.join(BASE_STORAGE, "isolation_forest.pkl")

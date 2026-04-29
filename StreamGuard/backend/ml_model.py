@@ -7,10 +7,6 @@ from sklearn.preprocessing import StandardScaler
 import pickle
 from config import MODEL_PATH, SCALER_PATH
 
-# Where we save the trained model so it persists across restarts
-MODEL_PATH = r"C:\Users\joypa\StreamGuardDB\isolation_forest.pkl"
-SCALER_PATH = r"C:\Users\joypa\StreamGuardDB\scaler.pkl"
-
 # ── Feature extraction ────────────────────────────────────────────────────────
 
 def extract_features(sessions):
