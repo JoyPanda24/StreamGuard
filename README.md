@@ -3,7 +3,7 @@
 Real-time cybersecurity system that detects piracy and session hijacking on OTT platforms. StreamGuard uses machine learning and behavioral analysis to identify suspicious account activity patterns.
 
 ![Status](https://img.shields.io/badge/Status-Production-brightgreen)
-![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![ML](https://img.shields.io/badge/ML-Isolation%20Forest-orange)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
@@ -11,14 +11,14 @@ Real-time cybersecurity system that detects piracy and session hijacking on OTT 
 ## Quick Navigation
 
 **New to StreamGuard?**
-- [Setup Guide](StreamGuard/INSTALL.md) — Installation for your OS
-- [Linux Quick Start](StreamGuard/LINUX_QUICKSTART.md) — 30-second Linux setup
-- [Windows/All Platforms](StreamGuard/README.md) — Main documentation
+- [Setup Guide](INSTALL.md) — Installation for your OS
+- [Linux Quick Start](LINUX_QUICKSTART.md) — 30-second Linux setup
+- [Windows/All Platforms](README.md) — Main documentation
 
 **Need Help?**
-- [Troubleshooting](StreamGuard/INSTALL.md#common-issues) — Common issues & solutions
-- [Cross-Platform Details](StreamGuard/CROSSPLATFORM.md) — Technical documentation
-- [Lab Verification](StreamGuard/VERIFICATION.md) — Deployment checklist
+- [Troubleshooting](INSTALL.md#common-issues) — Common issues & solutions
+- [Cross-Platform Details](CROSSPLATFORM.md) — Technical documentation
+- [Lab Verification](VERIFICATION.md) — Deployment checklist
 
 ## Overview
 
@@ -433,20 +433,6 @@ Run:
 ```bash
 docker-compose up -d
 ```
-RUN pip install -r requirements.txt
-COPY StreamGuard/backend .
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
-```
-
-## Database Schema
-
-### Sessions Table
-- Stores user session data with geolocation and device info
-- Indexed on user_id and timestamp for fast queries
-
-### Threat Logs Table
-- Persists analysis results and flagged behaviors
-- JSON storage for flexible threat flag structures
 
 ## Performance Optimization
 
@@ -462,19 +448,11 @@ CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
 - Missing fields result in safe default values
 - Database connections properly managed
 
-## Contributing
-
-Contributions welcome! Areas for enhancement:
-- Additional anomaly detection algorithms
-- Real-time streaming analytics
-- Enhanced dashboard features
-- Multi-tenant support
-
 ## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
-| Backend | Python 3.14+ Flask |
+| Backend | Python 3.10+ Flask |
 | ML Model | scikit-learn Isolation Forest |
 | Database | SQLite |
 | Geolocation | ip-api.com API |
